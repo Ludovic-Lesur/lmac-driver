@@ -85,7 +85,7 @@ static void _LMAC_rx_irq_callback(uint8_t data) {
     case LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS:
 #ifdef LMAC_DRIVER_MODE_MASTER
         // Check if the source address corresponds to the previous node.
-        if (data == (lmac_ctx.destination_address | LMAC_ADDRESS_MARKER)) {
+        if (data == lmac_ctx.destination_address) {
             lmac_ctx.rx_byte_count++;
         }
         else {
