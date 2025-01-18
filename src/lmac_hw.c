@@ -62,12 +62,4 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_write(uint8_t* data, uint32_t data_s
     return status;
 }
 
-#ifdef LMAC_DRIVER_MODE_SLAVE
-/*******************************************************************/
-uint32_t __attribute__((weak)) LMAC_HW_get_uptime_seconds(void) {
-    /* To be implemented */
-    return 0;
-}
-#endif
-
 #endif /* LMAC_DRIVER_DISABLE */

@@ -65,17 +65,6 @@ LMAC_status_t LMAC_HW_disable_rx(void);
  *******************************************************************/
 LMAC_status_t LMAC_HW_write(uint8_t* data, uint32_t data_size_bytes);
 
-#ifdef LMAC_DRIVER_MODE_SLAVE
-/*!******************************************************************
- * \fn uint32_t LMAC_HW_get_uptime_seconds(void)
- * \brief Get system uptime.
- * \param[in]   none
- * \param[out]  none
- * \retval      System uptime in seconds.
- *******************************************************************/
-uint32_t LMAC_HW_get_uptime_seconds(void);
-#endif
-
 #endif /* LMAC_DRIVER_DISABLE */
 
 #endif /* __LMAC_HW_H__ */

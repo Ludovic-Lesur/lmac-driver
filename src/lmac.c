@@ -34,9 +34,6 @@ typedef struct {
     uint8_t self_address;
     uint8_t destination_address;
     uint8_t rx_byte_count;
-#ifdef LMAC_DRIVER_MODE_SLAVE
-    uint32_t first_rx_byte_timestamp_seconds;
-#endif
 } LMAC_context_t;
 
 /*** LMAC local global variables ***/
@@ -56,20 +53,6 @@ static LMAC_context_t lmac_ctx;
 
 /*******************************************************************/
 static void _LMAC_rx_irq_callback(uint8_t data) {
-#ifdef LMAC_DRIVER_MODE_SLAVE
-    // Local variables.
-    uint32_t uptime_seconds = LMAC_HW_get_uptime_seconds();
-    // Manage timeout.
-    if (uptime_seconds > (lmac_ctx.first_rx_byte_timestamp_seconds + LMAC_DRIVER_RX_TIMEOUT_SECONDS)) {
-        // Reset receiver.
-        lmac_ctx.rx_byte_count = 0;
-        // Check address.
-        if (data != (lmac_ctx.self_address | LMAC_ADDRESS_MARKER)) {
-            LMAC_HW_enable_rx();
-            return;
-        }
-    }
-#endif
     // Check field index.
     switch (lmac_ctx.rx_byte_count) {
     case LMAC_FRAME_FIELD_INDEX_DESTINATION_ADDRESS:
@@ -77,10 +60,6 @@ static void _LMAC_rx_irq_callback(uint8_t data) {
         if (data == (lmac_ctx.self_address | LMAC_ADDRESS_MARKER)) {
             lmac_ctx.rx_byte_count++;
         }
-#ifdef LMAC_DRIVER_MODE_SLAVE
-        // Update first byte timestamp.
-        lmac_ctx.first_rx_byte_timestamp_seconds = uptime_seconds;
-#endif
         break;
     case LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS:
 #ifdef LMAC_DRIVER_MODE_MASTER
@@ -123,9 +102,6 @@ LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback) {
     lmac_ctx.self_address = LMAC_ADDRESS_LAST;
     lmac_ctx.destination_address = LMAC_ADDRESS_LAST;
     lmac_ctx.rx_byte_count = 0;
-#ifdef LMAC_DRIVER_MODE_SLAVE
-    lmac_ctx.first_rx_byte_timestamp_seconds = 0;
-#endif
     // Init hardware interface.
     status = LMAC_HW_init(baud_rate, &_LMAC_rx_irq_callback, &self_address);
     if (status != LMAC_SUCCESS) goto errors;
