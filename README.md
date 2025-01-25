@@ -13,6 +13,7 @@ Here is the versions compatibility table:
 
 | **lmac-driver** | **embedded-utils** |
 |:---:|:---:|
+| [sw2.0](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw2.0) | >= [sw1.3](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw1.3) |
 | [sw1.0](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw1.0) | >= [sw1.3](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw1.3) |
 
 # Compilation flags
@@ -25,4 +26,3 @@ Here is the versions compatibility table:
 | `LMAC_DRIVER_NVM_ERROR_BASE_LAST` | `<value>` | Last error base of the low level NVM driver. |
 | `LMAC_DRIVER_MODE_MASTER` | `defined` / `undefined` | Enable master operating mode. |
 | `LMAC_DRIVER_MODE_SLAVE` | `defined` / `undefined` | Enable slave operating mode. |
-| `LMAC_DRIVER_RX_TIMEOUT_SECONDS` | `<value>` | Define the frame reception timeout in seconds (slave mode only). |
