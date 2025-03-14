@@ -11,6 +11,7 @@
 #ifndef LMAC_DRIVER_DISABLE_FLAGS_FILE
 #include "lmac_driver_flags.h"
 #endif
+#include "error.h"
 #include "types.h"
 
 /*** LMAC macros ***/
@@ -32,7 +33,7 @@ typedef enum {
     LMAC_ERROR_SELF_ADDRESS,
     LMAC_ERROR_DESTINATION_ADDRESS,
     // Low level drivers errors.
-    LMAC_ERROR_BASE_HW_INTERFACE = 0x0100,
+    LMAC_ERROR_BASE_HW_INTERFACE = ERROR_BASE_STEP,
     LMAC_ERROR_BASE_NVM = (LMAC_ERROR_BASE_HW_INTERFACE + LMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST),
     // Last base value.
     LMAC_ERROR_BASE_LAST = (LMAC_ERROR_BASE_NVM + LMAC_DRIVER_NVM_ERROR_BASE_LAST),
