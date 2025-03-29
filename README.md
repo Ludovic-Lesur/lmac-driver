@@ -27,3 +27,4 @@ Here is the versions compatibility table:
 | `LMAC_DRIVER_NVM_ERROR_BASE_LAST` | `<value>` | Last error base of the low level NVM driver. |
 | `LMAC_DRIVER_MODE_MASTER` | `defined` / `undefined` | Enable master operating mode. |
 | `LMAC_DRIVER_MODE_SLAVE` | `defined` / `undefined` | Enable slave operating mode. |
+| `LMAC_DRIVER_BUFFER_SIZE` | `<value>` | Size of the internal TX and RX buffers in bytes. |

@@ -32,6 +32,10 @@ typedef enum {
     LMAC_ERROR_NULL_PARAMETER,
     LMAC_ERROR_SELF_ADDRESS,
     LMAC_ERROR_DESTINATION_ADDRESS,
+    LMAC_ERROR_TX_DATA_SIZE,
+    LMAC_ERROR_RX_DESTINATION_ADDRESS,
+    LMAC_ERROR_RX_SOURCE_ADDRESS,
+    LMAC_ERROR_RX_DATA_SIZE,
     // Low level drivers errors.
     LMAC_ERROR_BASE_HW_INTERFACE = ERROR_BASE_STEP,
     LMAC_ERROR_BASE_NVM = (LMAC_ERROR_BASE_HW_INTERFACE + LMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST),
@@ -47,6 +51,12 @@ typedef enum {
  *******************************************************************/
 typedef void (*LMAC_rx_irq_cb_t)(uint8_t data);
 
+/*!******************************************************************
+ * \fn LMAC_error_cb_t
+ * \brief Transfer error callback.
+ *******************************************************************/
+typedef void (*LMAC_error_cb_t)(LMAC_status_t status);
+
 /*** LMAC functions ***/
 
 /*!******************************************************************
@@ -54,10 +64,11 @@ typedef void (*LMAC_rx_irq_cb_t)(uint8_t data);
  * \brief Init LMAC interface.
  * \param[in]   baud_rate: Bus baud rate.
  * \param[in]   rx_irq_callback: Function to call on frame reception interrupt.
+ * \param[in]   error_callback: Function to call on error event.
  * \param[out]  none
  * \retval      Function execution status.
  *******************************************************************/
-LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback);
+LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback, LMAC_error_cb_t error_callback);
 
 /*!******************************************************************
  * \fn LMAC_status_t LMAC_de_init(void)
