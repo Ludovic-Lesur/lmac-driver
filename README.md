@@ -17,6 +17,28 @@ Here is the versions compatibility table:
 | [sw2.0](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw2.0) | >= [sw1.3](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw1.3) |
 | [sw1.0](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw1.0) | >= [sw1.3](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw1.3) |
 
+# Frame structure
+
+The protocol is designed to **transfer 7-bits data between nodes on an RS485 bus**.
+
+| B0 | B1 | B2 ... B(n) | B(n+1) | B(n+2) | B(n+3) |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| Destination @ \| 0x80 | Source @ | DATA | CKH | CKL | 0x7F |
+
+The first byte of the frame is the **destination address** of the packet. It must have the **MSB set to 1** in order to be recognized as an address. All other bytes must have the **MSB set to 0**.
+
+The second byte is the **source address**, in other words the address of the node which is transmitting the packet. For a slave node, this field is used to know at which address the response has to be sent. For the master node, it is used to check that the response comes from the expected slave.
+
+Next bytes are the **data**.
+
+Then there is a **16-bits checksum** composed of the `CKH` and `CKL` fields. It is computed over all the previous bytes using the Fletcher algorithm.
+
+The frame finally ends with a **specific marker** `0x7F` which must not be used in any other byte.
+
+# Node address range
+
+Because of the MSB constraint and the specific end marker, node addresses are limited to the `0x00 - 0x7E` range (127 nodes).
+
 # Compilation flags
 
 | **Flag name** | **Value** | **Description** |
