@@ -65,6 +65,15 @@ LMAC_status_t LMAC_HW_disable_rx(void);
  *******************************************************************/
 LMAC_status_t LMAC_HW_write(uint8_t* data, uint32_t data_size_bytes);
 
+/*!******************************************************************
+ * \fn void LMAC_HW_stack_error(LMAC_status_t status)
+ * \brief Optional function called in case of frame decoding error.
+ * \param[in]   status: Error code to stack.
+ * \param[out]  none
+ * \retval      none
+ *******************************************************************/
+void LMAC_HW_stack_error(LMAC_status_t status);
+
 #endif /* LMAC_DRIVER_DISABLE */
 
 #endif /* __LMAC_HW_H__ */

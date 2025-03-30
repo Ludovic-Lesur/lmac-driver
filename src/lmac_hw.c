@@ -62,4 +62,10 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_write(uint8_t* data, uint32_t data_s
     return status;
 }
 
+/*******************************************************************/
+void __attribute__((weak)) LMAC_HW_stack_error(LMAC_status_t status) {
+    /* To be implemented */
+    UNUSED(status);
+}
+
 #endif /* LMAC_DRIVER_DISABLE */

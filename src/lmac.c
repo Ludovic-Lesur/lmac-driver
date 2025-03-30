@@ -36,18 +36,16 @@ typedef enum {
 /*******************************************************************/
 typedef struct {
     LMAC_rx_irq_cb_t rx_irq_callback;
-    LMAC_error_cb_t error_callback;
     uint8_t self_address;
-    uint8_t destination_address;
-    uint8_t rx_buffer[LMAC_DRIVER_BUFFER_SIZE];
-    uint32_t rx_buffer_size;
+    volatile uint8_t destination_address;
+    volatile uint8_t rx_buffer[LMAC_DRIVER_BUFFER_SIZE];
+    volatile uint32_t rx_buffer_size;
 } LMAC_context_t;
 
 /*** LMAC local global variables ***/
 
 static LMAC_context_t lmac_ctx = {
     .rx_irq_callback = NULL,
-    .error_callback = NULL,
     .self_address = LMAC_ADDRESS_LAST,
     .destination_address = LMAC_ADDRESS_LAST,
     .rx_buffer = { [0 ... (LMAC_DRIVER_BUFFER_SIZE - 1)] = 0x00 },
@@ -66,25 +64,18 @@ static LMAC_context_t lmac_ctx = {
 }
 
 /*******************************************************************/
-#define _LMAC_error_callback(error_code) { \
-    if (lmac_ctx.error_callback != NULL) { \
-        lmac_ctx.error_callback(error_code); \
-    } \
-}
-
-/*******************************************************************/
 static void _LMAC_decode_frame(void) {
     // Local variables.
     uint32_t idx = 0;
     // Check destination address.
     if (lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_DESTINATION_ADDRESS] != (lmac_ctx.self_address | LMAC_ADDRESS_MARKER)) {
-        _LMAC_error_callback(LMAC_ERROR_RX_DESTINATION_ADDRESS);
+        LMAC_HW_stack_error(LMAC_ERROR_RX_DESTINATION_ADDRESS);
         goto errors;
     }
 #ifdef LMAC_DRIVER_MODE_MASTER
     // Check if the source address corresponds to the previous node.
     if (lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS] != lmac_ctx.destination_address) {
-        _LMAC_error_callback(LMAC_ERROR_RX_SOURCE_ADDRESS);
+        LMAC_HW_stack_error(LMAC_ERROR_RX_SOURCE_ADDRESS);
         goto errors;
     }
 #else
@@ -106,22 +97,20 @@ errors:
 static void _LMAC_rx_irq_callback(uint8_t data) {
     // Store byte into buffer.
     lmac_ctx.rx_buffer[lmac_ctx.rx_buffer_size] = data;
-    // Increment index.
     lmac_ctx.rx_buffer_size++;
     // Check end marker.
     if (data == LMAC_END_MARKER) {
         // Decode frame.
         _LMAC_decode_frame();
-        // Reset size.
+        // Restart reception.
         lmac_ctx.rx_buffer_size = 0;
     }
     else {
         // Check size.
         if (lmac_ctx.rx_buffer_size >= LMAC_DRIVER_BUFFER_SIZE) {
-            // Reset index.
+            // Restart reception.
+            LMAC_HW_stack_error(LMAC_ERROR_RX_DATA_SIZE);
             lmac_ctx.rx_buffer_size = 0;
-            // Call error callback.
-            _LMAC_error_callback(LMAC_ERROR_RX_DATA_SIZE);
         }
     }
 }
@@ -129,11 +118,10 @@ static void _LMAC_rx_irq_callback(uint8_t data) {
 /*** LMAC functions ***/
 
 /*******************************************************************/
-LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback, LMAC_error_cb_t error_callback) {
+LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback) {
     // Local variables.
     LMAC_status_t status = LMAC_SUCCESS;
     uint8_t self_address = 0;
-    uint32_t idx = 0;
     // Check parameter.
     if (rx_irq_callback == NULL) {
         status = LMAC_ERROR_NULL_PARAMETER;
@@ -141,12 +129,8 @@ LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback, LM
     }
     // Init context.
     lmac_ctx.rx_irq_callback = rx_irq_callback;
-    lmac_ctx.error_callback = error_callback;
     lmac_ctx.self_address = LMAC_ADDRESS_LAST;
     lmac_ctx.destination_address = LMAC_ADDRESS_LAST;
-    for (idx = 0; idx < LMAC_DRIVER_BUFFER_SIZE; idx++) {
-        lmac_ctx.rx_buffer[idx] = 0x00;
-    }
     lmac_ctx.rx_buffer_size = 0;
     // Init hardware interface.
     status = LMAC_HW_init(baud_rate, &_LMAC_rx_irq_callback, &self_address);
@@ -178,6 +162,7 @@ LMAC_status_t LMAC_enable_rx(void) {
     status = LMAC_HW_enable_rx();
     if (status != LMAC_SUCCESS) goto errors;
 errors:
+    lmac_ctx.rx_buffer_size = 0;
     return status;
 }
 
@@ -218,7 +203,6 @@ LMAC_status_t LMAC_write(uint8_t* data, uint32_t data_size_bytes) {
     status = LMAC_HW_write(lmac_frame, lmac_frame_size);
     if (status != LMAC_SUCCESS) goto errors;
 errors:
-    lmac_ctx.rx_buffer_size = 0;
     return status;
 }
 
