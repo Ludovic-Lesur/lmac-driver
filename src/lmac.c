@@ -38,6 +38,7 @@
 
 /*******************************************************************/
 typedef struct {
+    uint8_t init_flag;
     LMAC_rx_irq_cb_t rx_irq_callback;
     uint8_t self_address;
     volatile uint8_t destination_address;
@@ -48,6 +49,7 @@ typedef struct {
 /*** LMAC local global variables ***/
 
 static LMAC_context_t lmac_ctx = {
+    .init_flag = 0,
     .rx_irq_callback = NULL,
     .self_address = LMAC_ADDRESS_LAST,
     .destination_address = LMAC_ADDRESS_LAST,
@@ -155,9 +157,9 @@ LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback) {
     // Local variables.
     LMAC_status_t status = LMAC_SUCCESS;
     uint8_t self_address = 0;
-    // Check parameter.
-    if (rx_irq_callback == NULL) {
-        status = LMAC_ERROR_NULL_PARAMETER;
+    // Check state.
+    if (lmac_ctx.init_flag != 0) {
+        status = LMAC_ERROR_ALREADY_INITIALIZED;
         goto errors;
     }
     // Init context.
@@ -172,6 +174,7 @@ LMAC_status_t LMAC_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback) {
     _LMAC_check_address(self_address, LMAC_ERROR_SELF_ADDRESS);
     // Update local context.
     lmac_ctx.self_address = self_address;
+    lmac_ctx.init_flag = 1;
 errors:
     return status;
 }
@@ -180,6 +183,13 @@ errors:
 LMAC_status_t LMAC_de_init(void) {
     // Local variables.
     LMAC_status_t status = LMAC_SUCCESS;
+    // Check state.
+    if (lmac_ctx.init_flag == 0) {
+        status = LMAC_ERROR_UNINITIALIZED;
+        goto errors;
+    }
+    // Update initialization flag.
+    lmac_ctx.init_flag = 0;
     // Release hardware interface.
     status = LMAC_HW_de_init();
     if (status != LMAC_SUCCESS) goto errors;
@@ -191,6 +201,11 @@ errors:
 LMAC_status_t LMAC_enable_rx(void) {
     // Local variables.
     LMAC_status_t status = LMAC_SUCCESS;
+    // Check state.
+    if (lmac_ctx.init_flag == 0) {
+        status = LMAC_ERROR_UNINITIALIZED;
+        goto errors;
+    }
     // Release hardware interface.
     status = LMAC_HW_enable_rx();
     if (status != LMAC_SUCCESS) goto errors;
@@ -203,6 +218,11 @@ errors:
 LMAC_status_t LMAC_disable_rx(void) {
     // Local variables.
     LMAC_status_t status = LMAC_SUCCESS;
+    // Check state.
+    if (lmac_ctx.init_flag == 0) {
+        status = LMAC_ERROR_UNINITIALIZED;
+        goto errors;
+    }
     // Release hardware interface.
     status = LMAC_HW_disable_rx();
     if (status != LMAC_SUCCESS) goto errors;
@@ -219,13 +239,22 @@ LMAC_status_t LMAC_write(uint8_t* data, uint32_t data_size_bytes) {
     uint8_t cksl = 0;
     uint8_t cksh = 0;
     uint32_t idx = 0;
-    // Check address.
-    _LMAC_check_address(lmac_ctx.destination_address, LMAC_ERROR_DESTINATION_ADDRESS);
-    // Check size.
+    // Check state.
+    if (lmac_ctx.init_flag == 0) {
+        status = LMAC_ERROR_UNINITIALIZED;
+        goto errors;
+    }
+    // Check parameters.
+    if (data == NULL) {
+        status = LMAC_ERROR_NULL_PARAMETER;
+        goto errors;
+    }
     if (data_size_bytes > LMAC_DATA_SIZE_BYTES(LMAC_DRIVER_BUFFER_SIZE)) {
         status = LMAC_ERROR_TX_DATA_SIZE;
         goto errors;
     }
+    // Check address.
+    _LMAC_check_address(lmac_ctx.destination_address, LMAC_ERROR_DESTINATION_ADDRESS);
     // Build address header.
     lmac_frame[lmac_frame_size++] = (lmac_ctx.destination_address | LMAC_ADDRESS_MARKER);
     lmac_frame[lmac_frame_size++] = lmac_ctx.self_address;
