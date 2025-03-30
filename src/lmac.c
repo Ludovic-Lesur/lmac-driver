@@ -17,21 +17,24 @@
 
 /*** LMAC local macros ***/
 
-#define LMAC_ADDRESS_MARKER         0x80
+#define LMAC_ADDRESS_MARKER                         0x80
+#define LMAC_DATA_MASK                              0x7F
 
-#define LMAC_END_MARKER             0x17
-#define LMAC_END_MAKER_SIZE_BYTES   1
+#define LMAC_DESTINATION_ADDRESS_INDEX              0
 
-#define LMAC_DATA_SIZE_BYTES(size)  (size - (LMAC_ADDRESS_SIZE_BYTES << 1) - LMAC_END_MAKER_SIZE_BYTES)
+#define LMAC_SOURCE_ADDRESS_INDEX                   (LMAC_DESTINATION_ADDRESS_INDEX + LMAC_ADDRESS_SIZE_BYTES)
+
+#define LMAC_DATA_INDEX                             (LMAC_SOURCE_ADDRESS_INDEX + LMAC_ADDRESS_SIZE_BYTES)
+#define LMAC_DATA_SIZE_BYTES(frame_size)            (frame_size - (LMAC_ADDRESS_SIZE_BYTES << 1) - LMAC_CHECKSUM_SIZE_BYTES - LMAC_END_MARKER_SIZE_BYTES)
+
+#define LMAC_CHECKSUM_INDEX(frame_size)             (LMAC_DATA_INDEX + LMAC_DATA_SIZE_BYTES(frame_size))
+#define LMAC_CHECKSUM_RANGE_SIZE_BYTES(frame_size)  (frame_size - LMAC_CHECKSUM_SIZE_BYTES - LMAC_END_MARKER_SIZE_BYTES)
+#define LMAC_CHECKSUM_SIZE_BYTES                    2
+
+#define LMAC_END_MARKER                             0x7F
+#define LMAC_END_MARKER_SIZE_BYTES                  1
 
 /*** LMAC local structures ***/
-
-/*******************************************************************/
-typedef enum {
-    LMAC_FRAME_FIELD_INDEX_DESTINATION_ADDRESS = 0,
-    LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS = (LMAC_FRAME_FIELD_INDEX_DESTINATION_ADDRESS + LMAC_ADDRESS_SIZE_BYTES),
-    LMAC_FRAME_FIELD_INDEX_DATA = (LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS + LMAC_ADDRESS_SIZE_BYTES)
-} LMAC_frame_field_index_t;
 
 /*******************************************************************/
 typedef struct {
@@ -57,36 +60,66 @@ static LMAC_context_t lmac_ctx = {
 /*******************************************************************/
 #define _LMAC_check_address(address, error_code) { \
     /* Check address */ \
-    if (address >= LMAC_ADDRESS_LAST) { \
+    if (address > LMAC_ADDRESS_LAST) { \
         status = error_code; \
         goto errors; \
     } \
 }
 
 /*******************************************************************/
-static void _LMAC_decode_frame(void) {
+static void _LMAC_compute_checksum(uint8_t* data, uint32_t data_size_bytes, uint8_t* cksl, uint8_t* cksh) {
     // Local variables.
     uint32_t idx = 0;
+    // Reset result.
+    (*cksl) = 0;
+    (*cksh) = 0;
+    // Fletcher-16 algorithm.
+    for (idx = 0; idx < data_size_bytes; idx++) {
+        (*cksl) = (((*cksl) + data[idx]) & LMAC_DATA_MASK);
+        (*cksh) = (((*cksh) + (*cksl)) & LMAC_DATA_MASK);
+    }
+    // Change end marker.
+    if ((*cksl) == LMAC_END_MARKER) {
+        (*cksl) = 0x00;
+    }
+    if ((*cksh) == LMAC_END_MARKER) {
+        (*cksh) = 0x00;
+    }
+}
+
+/*******************************************************************/
+static void _LMAC_decode_frame(void) {
+    // Local variables.
+    uint8_t cksl = 0;
+    uint8_t cksh = 0;
+    uint32_t idx = 0;
     // Check destination address.
-    if (lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_DESTINATION_ADDRESS] != (lmac_ctx.self_address | LMAC_ADDRESS_MARKER)) {
+    if (lmac_ctx.rx_buffer[LMAC_DESTINATION_ADDRESS_INDEX] != (lmac_ctx.self_address | LMAC_ADDRESS_MARKER)) {
         LMAC_HW_stack_error(LMAC_ERROR_RX_DESTINATION_ADDRESS);
         goto errors;
     }
 #ifdef LMAC_DRIVER_MODE_MASTER
     // Check if the source address corresponds to the previous node.
-    if (lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS] != lmac_ctx.destination_address) {
+    if (lmac_ctx.rx_buffer[LMAC_SOURCE_ADDRESS_INDEX] != lmac_ctx.destination_address) {
         LMAC_HW_stack_error(LMAC_ERROR_RX_SOURCE_ADDRESS);
         goto errors;
     }
 #else
     // Store source address for next reply.
-    lmac_ctx.destination_address = lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_SOURCE_ADDRESS];
+    lmac_ctx.destination_address = lmac_ctx.rx_buffer[LMAC_SOURCE_ADDRESS_INDEX];
 #endif
+    // Compute checksum.
+    _LMAC_compute_checksum((uint8_t*) lmac_ctx.rx_buffer, LMAC_CHECKSUM_RANGE_SIZE_BYTES(lmac_ctx.rx_buffer_size), &cksl, &cksh);
+    // Verify checksum.
+    if ((lmac_ctx.rx_buffer[LMAC_CHECKSUM_INDEX(lmac_ctx.rx_buffer_size)] != cksh) || (lmac_ctx.rx_buffer[LMAC_CHECKSUM_INDEX(lmac_ctx.rx_buffer_size) + 1] != cksl)) {
+        LMAC_HW_stack_error(LMAC_ERROR_RX_CHECKSUM);
+        goto errors;
+    }
     // Frame is valid.
     if (lmac_ctx.rx_irq_callback != NULL) {
         // Data bytes loop.
         for (idx = 0; idx < LMAC_DATA_SIZE_BYTES(lmac_ctx.rx_buffer_size); idx++) {
-            lmac_ctx.rx_irq_callback(lmac_ctx.rx_buffer[LMAC_FRAME_FIELD_INDEX_DATA + idx]);
+            lmac_ctx.rx_irq_callback(lmac_ctx.rx_buffer[LMAC_DATA_INDEX + idx]);
         }
     }
 errors:
@@ -183,6 +216,8 @@ LMAC_status_t LMAC_write(uint8_t* data, uint32_t data_size_bytes) {
     LMAC_status_t status = LMAC_SUCCESS;
     uint8_t lmac_frame[LMAC_DRIVER_BUFFER_SIZE];
     uint32_t lmac_frame_size = 0;
+    uint8_t cksl = 0;
+    uint8_t cksh = 0;
     uint32_t idx = 0;
     // Check address.
     _LMAC_check_address(lmac_ctx.destination_address, LMAC_ERROR_DESTINATION_ADDRESS);
@@ -196,8 +231,18 @@ LMAC_status_t LMAC_write(uint8_t* data, uint32_t data_size_bytes) {
     lmac_frame[lmac_frame_size++] = lmac_ctx.self_address;
     // Build data.
     for (idx = 0; idx < data_size_bytes; idx++) {
+        // Check end marker and byte mask.
+        if (((data[idx] & LMAC_ADDRESS_MARKER) != 0) || (data[idx] == LMAC_END_MARKER)) {
+            status = LMAC_ERROR_TX_DATA_INVALID;
+            goto errors;
+        }
         lmac_frame[lmac_frame_size++] = data[idx];
     }
+    // Compute checksum.
+    _LMAC_compute_checksum(lmac_frame, lmac_frame_size, &cksl, &cksh);
+    lmac_frame[lmac_frame_size++] = cksh;
+    lmac_frame[lmac_frame_size++] = cksl;
+    // End marker.
     lmac_frame[lmac_frame_size++] = LMAC_END_MARKER;
     // Send frame.
     status = LMAC_HW_write(lmac_frame, lmac_frame_size);
