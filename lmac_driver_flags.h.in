@@ -1,0 +1,21 @@
+/*
+ * lmac_driver_flags.h
+ *
+ *  Created on: 27 nov. 2024
+ *      Author: Ludo
+ */
+
+#ifndef __LMAC_DRIVER_FLAGS_H__
+#define __LMAC_DRIVER_FLAGS_H__
+
+/*** LMAC driver compilation flags ***/
+
+#cmakedefine LMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST   @LMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST@
+#cmakedefine LMAC_DRIVER_NVM_ERROR_BASE_LAST            @LMAC_DRIVER_NVM_ERROR_BASE_LAST@
+
+#cmakedefine LMAC_DRIVER_MODE_MASTER
+#cmakedefine LMAC_DRIVER_MODE_SLAVE
+
+#cmakedefine LMAC_DRIVER_BUFFER_SIZE                    @LMAC_DRIVER_BUFFER_SIZE@
+
+#endif /* __LMAC_DRIVER_FLAGS_H__ */

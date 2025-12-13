@@ -51,3 +51,23 @@ Because of the MSB constraint and the specific end marker, node addresses are li
 | `LMAC_DRIVER_MODE_MASTER` | `defined` / `undefined` | Enable master operating mode. |
 | `LMAC_DRIVER_MODE_SLAVE` | `defined` / `undefined` | Enable slave operating mode. |
 | `LMAC_DRIVER_BUFFER_SIZE` | `<value>` | Size of the internal TX and RX buffers in bytes. |
+
+# Build
+
+A static library can be compiled by command line with `cmake`.
+
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE="<toolchain_file_path>" \
+      -DTOOLCHAIN_PATH="<arm-none-eabi-gcc_path>" \
+      -DTYPES_PATH="<types_file_path>" \
+      -DEMBEDDED_UTILS_PATH="<embedded-utils_path>" \
+      -DLMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST=0 \
+      -DLMAC_DRIVER_NVM_ERROR_BASE_LAST=0 \
+      -DLMAC_DRIVER_MODE_MASTER=ON \
+      -DLMAC_DRIVER_MODE_SLAVE=OFF \
+      -DLMAC_DRIVER_BUFFER_SIZE=64 \
+      -G "Unix Makefiles" ..
+make all
+```
