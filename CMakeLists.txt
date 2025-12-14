@@ -30,7 +30,7 @@ if(${BUILD_MODE} STREQUAL STATIC)
     endmacro()
     
     # Compilation flags.
-    add_compilation_flag(LMAC_DRIVERS_DISABLE "Disable the LMAC driver." OFF)
+    add_compilation_flag(LMAC_DRIVER_DISABLE "Disable the LMAC driver." OFF)
     add_compilation_flag(LMAC_DRIVER_HW_INTERFACE_ERROR_BASE_LAST "Last error base of the low level bus driver." 0)
     add_compilation_flag(LMAC_DRIVER_NVM_ERROR_BASE_LAST "Last error base of the low level NVM driver." 0)
     add_compilation_flag(LMAC_DRIVER_MODE_MASTER "Enable master operating mode." ON)
