@@ -109,6 +109,11 @@ static void _LMAC_decode_frame(void) {
 #else
     // Store source address for next reply.
     lmac_ctx.destination_address = lmac_ctx.rx_buffer[LMAC_SOURCE_ADDRESS_INDEX];
+    // Check if address is different.
+    if (lmac_ctx.destination_address == lmac_ctx.self_address) {
+        LMAC_HW_stack_error(LMAC_ERROR_RX_SOURCE_ADDRESS);
+        goto errors;
+    }
 #endif
     // Compute checksum.
     _LMAC_compute_checksum((uint8_t*) lmac_ctx.rx_buffer, LMAC_CHECKSUM_RANGE_SIZE_BYTES(lmac_ctx.rx_buffer_size), &cksl, &cksh);
