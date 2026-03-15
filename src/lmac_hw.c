@@ -20,7 +20,7 @@
 /*******************************************************************/
 LMAC_status_t __attribute__((weak)) LMAC_HW_init(uint32_t baud_rate, LMAC_rx_irq_cb_t rx_irq_callback, uint8_t* self_address) {
     // Local variables.
-    LMAC_status_t status = LMAC_SUCCESS;
+    LMAC_status_t status = LMAC_ERROR_HW_FUNCTION_NOT_IMPLEMENTED;
     /* To be implemented */
     UNUSED(baud_rate);
     UNUSED(rx_irq_callback);
@@ -31,7 +31,7 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_init(uint32_t baud_rate, LMAC_rx_irq
 /*******************************************************************/
 LMAC_status_t __attribute__((weak)) LMAC_HW_de_init(void) {
     // Local variables.
-    LMAC_status_t status = LMAC_SUCCESS;
+    LMAC_status_t status = LMAC_ERROR_HW_FUNCTION_NOT_IMPLEMENTED;
     /* To be implemented */
     return status;
 }
@@ -39,7 +39,7 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_de_init(void) {
 /*******************************************************************/
 LMAC_status_t __attribute__((weak)) LMAC_HW_enable_rx(void) {
     // Local variables.
-    LMAC_status_t status = LMAC_SUCCESS;
+    LMAC_status_t status = LMAC_ERROR_HW_FUNCTION_NOT_IMPLEMENTED;
     /* To be implemented */
     return status;
 }
@@ -47,7 +47,7 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_enable_rx(void) {
 /*******************************************************************/
 LMAC_status_t __attribute__((weak)) LMAC_HW_disable_rx(void) {
     // Local variables.
-    LMAC_status_t status = LMAC_SUCCESS;
+    LMAC_status_t status = LMAC_ERROR_HW_FUNCTION_NOT_IMPLEMENTED;
     /* To be implemented */
     return status;
 }
@@ -55,7 +55,7 @@ LMAC_status_t __attribute__((weak)) LMAC_HW_disable_rx(void) {
 /*******************************************************************/
 LMAC_status_t __attribute__((weak)) LMAC_HW_write(uint8_t* data, uint32_t data_size_bytes) {
     // Local variables.
-    LMAC_status_t status = LMAC_SUCCESS;
+    LMAC_status_t status = LMAC_ERROR_HW_FUNCTION_NOT_IMPLEMENTED;
     /* To be implemented */
     UNUSED(data);
     UNUSED(data_size_bytes);
