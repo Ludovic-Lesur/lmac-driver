@@ -13,6 +13,7 @@ Here is the versions compatibility table:
 
 | **lmac-driver** | **embedded-utils** |
 |:---:|:---:|
+| [sw3.4](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw3.4) | >= [sw5.0](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw5.0) |
 | [sw3.3](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw3.3) | >= [sw5.0](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw5.0) |
 | [sw3.2](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw3.2) | >= [sw5.0](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw5.0) |
 | [sw3.1](https://github.com/Ludovic-Lesur/lmac-driver/releases/tag/sw3.1) | >= [sw5.0](https://github.com/Ludovic-Lesur/embedded-utils/releases/tag/sw5.0) |
